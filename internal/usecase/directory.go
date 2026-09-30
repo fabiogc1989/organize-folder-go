@@ -2,9 +2,10 @@ package usecase
 
 import (
 	"fmt"
-	"organize-folder/internal/entity"
 	"path/filepath"
 	"slices"
+
+	"github.com/fabiogc1989/organize-folder/internal/entity"
 )
 
 var (

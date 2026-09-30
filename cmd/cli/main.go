@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"organize-folder/internal/entity"
-	"organize-folder/internal/usecase"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/fabiogc1989/organize-folder/internal/entity"
+	"github.com/fabiogc1989/organize-folder/internal/usecase"
 )
 
 func main() {

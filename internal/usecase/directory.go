@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 
@@ -47,4 +48,13 @@ func FindDirectoryByName(name string) (*entity.Directory, bool) {
 	}
 
 	return &Directories[dirIndex], true
+}
+
+func IsDirectoryPath(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return info.IsDir()
 }

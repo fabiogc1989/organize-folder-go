@@ -25,10 +25,14 @@ func ReadInput() string {
 		// Trim \r and \n (works across Windows and Linux/macOS)
 		input = strings.TrimSpace(input)
 
-		if len(input) > 0 {
+		if len(input) > 0 && IsDirectoryPath(input) == true {
 			return input
 		}
 
-		fmt.Println("Input cannot be empty. Please try again.")
+		if len(input) == 0 {
+			fmt.Println("Input cannot be empt. Please try again.")
+		} else if IsDirectoryPath(input) == false {
+			fmt.Println("Invalid path. Please try again.")
+		}
 	}
 }

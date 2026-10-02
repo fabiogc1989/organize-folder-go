@@ -1,0 +1,34 @@
+package usecase
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+)
+
+func ReadInput() string {
+	var (
+		input string
+		err   error
+	)
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Println("Type a directory path to organize files:")
+
+		input, err = reader.ReadString('\n')
+		if err != nil {
+			log.Panic(err)
+		}
+
+		// Trim \r and \n (works across Windows and Linux/macOS)
+		input = strings.TrimSpace(input)
+
+		if len(input) > 0 {
+			return input
+		}
+
+		fmt.Println("Input cannot be empty. Please try again.")
+	}
+}

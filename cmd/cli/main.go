@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -13,15 +11,7 @@ import (
 )
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Print("Type a directory path to organize files: ")
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	dirPath := strings.TrimSpace(input)
+	dirPath := usecase.ReadInput()
 
 	rootDir, err := entity.NewDirectory(filepath.Base(dirPath), dirPath, 0755)
 	if err != nil {

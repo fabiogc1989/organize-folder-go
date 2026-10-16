@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fabiogc1989/organize-folder/internal/entity"
+	entity "github.com/fabiogc1989/organize-folder/internal/domain"
 	"github.com/fabiogc1989/organize-folder/internal/usecase"
 )
 

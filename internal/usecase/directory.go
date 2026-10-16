@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/fabiogc1989/organize-folder/internal/entity"
+	entity "github.com/fabiogc1989/organize-folder/internal/domain"
 )
 
 var (

@@ -4,26 +4,25 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"strings"
 
-	entity "github.com/fabiogc1989/organize-folder/internal/domain"
+	"github.com/fabiogc1989/organize-folder/internal/domain"
 	"github.com/fabiogc1989/organize-folder/internal/usecase"
 )
 
 func main() {
 	dirPath := usecase.ReadInput()
 
-	rootDir, err := entity.NewDirectory(filepath.Base(dirPath), dirPath, 0755)
+	rootDir, err := domain.NewDirectory(filepath.Base(dirPath), dirPath, 0755)
 	if err != nil {
 		log.Fatalf("\033[31m%v\033[0m", err)
 	}
 
-	usecase.Directories, err = usecase.CreateDirectoryStructsByPath(rootDir.Path)
+	policies, err := usecase.CreateDefaultPolicyStructsByPath(rootDir.Path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err = usecase.CreateDirectories(usecase.Directories); err != nil {
+	if err = usecase.CreateDirectories(policies); err != nil {
 		log.Fatal(err)
 	}
 
@@ -32,22 +31,29 @@ func main() {
 		log.Fatalf("\033[31m%v\033[0m", err)
 	}
 
+	var (
+		success int = 0
+		warning int = 0
+		error   int = 0
+	)
+
 	for _, fileInfo := range rootFiles {
-		if strings.ToLower(fileInfo.Extension) == ".jpg" {
-			pictureDir, pictureFound := usecase.FindDirectoryByName("Pictures")
-			if pictureFound == false {
-				log.Printf("\033[31mPictures directory not found: %v\033[0m", err)
-				continue
-			}
-
-			if err = fileInfo.Move(pictureDir.Path); err != nil {
-				log.Panic(err)
-				continue
-			}
-
-			fmt.Printf("[MOVED] %s -> Pictures/\n", fileInfo.Name)
-		} else {
-			fmt.Printf("[FILE] %-15s Size: %d bytes\n", fileInfo.Name, fileInfo.Size)
+		policy, policyFound := usecase.FindDirectoryByFileExtension(policies, fileInfo.Extension)
+		if policyFound == false {
+			fmt.Printf("[Warning] No rules apply to %s, Size: %d bytes\n", fileInfo.Name, fileInfo.Size)
+			warning++
+			continue
 		}
+
+		if err = fileInfo.Move(policy.Dir.Path); err != nil {
+			fmt.Printf("[Error] Moving %s, Size: %d\n", fileInfo.Name, fileInfo.Size)
+			error++
+			continue
+		}
+
+		fmt.Printf("[Success] %s moved to %s\n", fileInfo.Name, policy.Dir.Path)
+		success++
 	}
+
+	fmt.Printf("\n\n%d item(s) moved\n%d item(s) not moved\n%d warning(s)\n", success, error, warning)
 }

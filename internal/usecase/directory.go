@@ -6,48 +6,64 @@ import (
 	"path/filepath"
 	"slices"
 
-	entity "github.com/fabiogc1989/organize-folder/internal/domain"
+	"github.com/fabiogc1989/organize-folder/internal/domain"
 )
 
 var (
-	DefaultDirectoryNames = []string{"Documents", "Pictures", "Musics", "Videos"}
-	Directories           []entity.Directory
+	extensionsByDirectory = map[string][]string{
+		"Documents": []string{".docx"},
+		"Pictures":  []string{".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".svg", ".ai", ".eps", ".raw", ".dng", ".cr2", ".cr3", ".nef", ".nrw", ".arw", ".psd", ".xcf", ".tiff", ".tif", ".heic", ".heif", ".bmp", ".ico"},
+		"Musics":    []string{".flac", ".wav", ".alac", ".aiff", ".ape", ".wv", ".mp3", ".aac", ".ogg", ".opus", ".wma", ".m4a", ".mid", ".midi", ".m4b"},
+		"Videos":    []string{".mp4", ".mkv", ".webm", ".mov", ".avi", ".m4v", ".wmv", ".flv", ".3gp", ".vob", ".ogv", ".mts", ".m2ts", ".mxf"},
+	}
 )
 
-func CreateDirectoryStructsByPath(rootPath string) ([]entity.Directory, error) {
-	directories := make([]entity.Directory, 0, len(DefaultDirectoryNames))
-	for _, dirName := range DefaultDirectoryNames {
-		dir, err := entity.NewDirectory(dirName, filepath.Join(rootPath, dirName), 0755)
+func CreateDefaultPolicyStructsByPath(rootPath string) ([]domain.AllowedExtensionsPolicy, error) {
+	policies := []domain.AllowedExtensionsPolicy{}
+	for dirName, fileExtensions := range extensionsByDirectory {
+		policy, err := domain.NewAllowedExtensionsPolicy(filepath.Join(rootPath, dirName), fileExtensions)
 		if err != nil {
-			return []entity.Directory{}, fmt.Errorf("\033[31mFailed to instantiate %s directory: %v\033[0m", dir.Name, err)
+			return []domain.AllowedExtensionsPolicy{}, fmt.Errorf("\033[31mFailed to instantiate %s directory: %v\033[0m", policy.Dir.Name, err)
 		}
-		directories = append(directories, *dir)
+		policies = append(policies, *policy)
 	}
-	return directories, nil
+	return policies, nil
 }
 
-func CreateDirectories(dirs []entity.Directory) error {
-	for _, dir := range dirs {
-		if dirExists := dir.Exists(); dirExists == false {
-			err := dir.Create()
+func CreateDirectories(policies []domain.AllowedExtensionsPolicy) error {
+	for _, policy := range policies {
+		if dirExists := policy.Dir.Exists(); dirExists == false {
+			err := policy.Dir.Create()
 			if err != nil {
-				return fmt.Errorf("\033[31mFailed to create %s directory: %v\033[0m", dir.Name, err)
+				return fmt.Errorf("\033[31mFailed to create %s directory: %v\033[0m", policy.Dir.Name, err)
 			}
 		}
 	}
 	return nil
 }
 
-func FindDirectoryByName(name string) (*entity.Directory, bool) {
-	dirIndex := slices.IndexFunc(Directories, func(d entity.Directory) bool {
-		return d.Name == name
+func FindDirectoryByName(arr []domain.AllowedExtensionsPolicy, name string) (*domain.AllowedExtensionsPolicy, bool) {
+	dirIndex := slices.IndexFunc(arr, func(d domain.AllowedExtensionsPolicy) bool {
+		return d.Dir.Name == name
 	})
 
 	if dirIndex == -1 {
 		return nil, false
 	}
 
-	return &Directories[dirIndex], true
+	return &arr[dirIndex], true
+}
+
+func FindDirectoryByFileExtension(arr []domain.AllowedExtensionsPolicy, ext string) (*domain.AllowedExtensionsPolicy, bool) {
+	dirIndex := slices.IndexFunc(arr, func(d domain.AllowedExtensionsPolicy) bool {
+		return d.IsAllowed(ext) == true
+	})
+
+	if dirIndex == -1 {
+		return nil, false
+	}
+
+	return &arr[dirIndex], true
 }
 
 func IsDirectoryPath(path string) bool {

@@ -3,35 +3,29 @@ package usecase
 import (
 	"bufio"
 	"fmt"
-	"log"
-	"os"
+	"io"
 	"strings"
 )
 
-func ReadInput() string {
-	var (
-		input string
-		err   error
-	)
-	reader := bufio.NewReader(os.Stdin)
+func ReadInput(r io.Reader, w io.Writer, isDirFunc func(string) bool) string {
+	reader := bufio.NewReader(r)
 	for {
-		fmt.Println("Type a directory path to organize files:")
+		fmt.Fprintln(w, "Type a directory path to organize files:")
 
-		input, err = reader.ReadString('\n')
+		input, err := reader.ReadString('\n')
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
 
-		// Trim \r and \n (works across Windows and Linux/macOS)
 		input = strings.TrimSpace(input)
 
-		if len(input) > 0 && IsDirectoryPath(input) == true {
+		if len(input) > 0 && isDirFunc(input) {
 			return input
 		}
 
 		if len(input) == 0 {
 			fmt.Println("Input cannot be empt. Please try again.")
-		} else if IsDirectoryPath(input) == false {
+		} else if isDirFunc(input) {
 			fmt.Println("Invalid path. Please try again.")
 		}
 	}

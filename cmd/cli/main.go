@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/fabiogc1989/organize-folder/internal/domain"
@@ -10,7 +11,7 @@ import (
 )
 
 func main() {
-	dirPath := usecase.ReadInput()
+	dirPath := usecase.ReadInput(os.Stdin, os.Stdout, usecase.IsDirectoryPath)
 
 	rootDir, err := domain.NewDirectory(filepath.Base(dirPath), dirPath, 0755)
 	if err != nil {
@@ -19,10 +20,6 @@ func main() {
 
 	policies, err := usecase.CreateDefaultPolicyStructsByPath(rootDir.Path)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err = usecase.CreateDirectories(policies); err != nil {
 		log.Fatal(err)
 	}
 
@@ -43,6 +40,15 @@ func main() {
 			fmt.Printf("[Warning] No rules apply to %s, Size: %d bytes\n", fileInfo.Name, fileInfo.Size)
 			warning++
 			continue
+		}
+
+		if dirExists := policy.Dir.Exists(); dirExists == false {
+			err := policy.Dir.Create()
+			if err != nil {
+				fmt.Printf("[Error] Failed to create directory: %s\n", policy.Dir.Name)
+				error++
+				continue
+			}
 		}
 
 		if err = fileInfo.Move(policy.Dir.Path); err != nil {

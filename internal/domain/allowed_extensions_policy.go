@@ -2,8 +2,11 @@ package domain
 
 import (
 	"errors"
+	"path/filepath"
 	"slices"
 )
+
+var ErrEmptyExtensions = errors.New("The file extensions are empty.")
 
 type AllowedExtensionsPolicy struct {
 	Dir        Directory
@@ -11,13 +14,15 @@ type AllowedExtensionsPolicy struct {
 }
 
 func NewAllowedExtensionsPolicy(directoryPath string, exts []string) (*AllowedExtensionsPolicy, error) {
-	dir, err := NewDirectory("sadad", directoryPath, 0755)
+	dirName := filepath.Base(directoryPath)
+
+	dir, err := NewDirectory(dirName, directoryPath, 0755)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(exts) == 0 {
-		return nil, errors.New("The file extensions are empty.")
+		return nil, ErrEmptyExtensions
 	}
 
 	return &AllowedExtensionsPolicy{

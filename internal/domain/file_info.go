@@ -30,7 +30,7 @@ func NewFileInfo(path string) (*FileInfo, error) {
 func (f *FileInfo) Move(folderPath string) error {
 	newPath := filepath.Join(folderPath, f.Name)
 	if err := os.Rename(f.FullName, newPath); err != nil {
-		return fmt.Errorf("\033[31mError moving file %s: %v\033[0m", f.Name, err)
+		return fmt.Errorf("Error moving file %s: %v\n", f.Name, err)
 	}
 
 	f.FullName = newPath

@@ -11,9 +11,17 @@ import (
 	"github.com/fabiogc1989/organize-folder/internal/usecase"
 )
 
+var version = "dev"
+
 func main() {
 	dirFLag := flag.String("dir", "", "Path to the folder to organize")
+	versionFlag := flag.Bool("version", false, "Print the version and exit")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("organize-folder version %s\n", version)
+		return
+	}
 
 	dirPath := *dirFLag
 	if dirPath == "" {

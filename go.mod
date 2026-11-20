@@ -1,3 +1,3 @@
 module github.com/fabiogc1989/organize-folder
 
-go 1.26.7
+go 1.27.4

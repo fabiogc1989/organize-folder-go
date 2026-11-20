@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,11 +12,23 @@ import (
 )
 
 func main() {
-	dirPath := usecase.ReadInput(os.Stdin, os.Stdout, usecase.IsDirectoryPath)
+	dirFLag := flag.String("dir", "", "Path to the folder to organize")
+	flag.Parse()
+
+	dirPath := *dirFLag
+	if dirPath == "" {
+		fmt.Fprintln(os.Stderr, "Error: -dir flag is required")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if !usecase.IsDirectoryPath(dirPath) {
+		log.Fatalf("Invalid directory path: %s", dirPath)
+	}
 
 	rootDir, err := domain.NewDirectory(filepath.Base(dirPath), dirPath, 0755)
 	if err != nil {
-		log.Fatalf("\033[31m%v\033[0m", err)
+		log.Fatal(err)
 	}
 
 	policies, err := usecase.CreateDefaultPolicyStructsByPath(rootDir.Path)
@@ -25,35 +38,30 @@ func main() {
 
 	rootFiles, err := rootDir.GetFiles()
 	if err != nil {
-		log.Fatalf("\033[31m%v\033[0m", err)
+		log.Fatal(err)
 	}
 
-	var (
-		success int = 0
-		warning int = 0
-		error   int = 0
-	)
+	var success, warning, failed int
 
 	for _, fileInfo := range rootFiles {
 		policy, policyFound := usecase.FindDirectoryByFileExtension(policies, fileInfo.Extension)
-		if policyFound == false {
+		if !policyFound {
 			fmt.Printf("[Warning] No rules apply to %s, Size: %d bytes\n", fileInfo.Name, fileInfo.Size)
 			warning++
 			continue
 		}
 
-		if dirExists := policy.Dir.Exists(); dirExists == false {
-			err := policy.Dir.Create()
-			if err != nil {
-				fmt.Printf("[Error] Failed to create directory: %s\n", policy.Dir.Name)
-				error++
+		if !policy.Dir.Exists() {
+			if err := policy.Dir.Create(); err != nil {
+				fmt.Printf("[Error] Failed to create directory %s: %v\n", policy.Dir.Name, err)
+				failed++
 				continue
 			}
 		}
 
-		if err = fileInfo.Move(policy.Dir.Path); err != nil {
-			fmt.Printf("[Error] Moving %s, Size: %d\n", fileInfo.Name, fileInfo.Size)
-			error++
+		if err := fileInfo.Move(policy.Dir.Path); err != nil {
+			fmt.Printf("[Error] Moving %s (Size: %d bytes): %v\n", fileInfo.Name, fileInfo.Size, err)
+			failed++
 			continue
 		}
 
@@ -61,5 +69,5 @@ func main() {
 		success++
 	}
 
-	fmt.Printf("\n\n%d item(s) moved\n%d item(s) not moved\n%d warning(s)\n", success, error, warning)
+	fmt.Printf("\n\n%d item(s) moved\n%d item(s) not moved\n%d warning(s)\n", success, failed, warning)
 }
